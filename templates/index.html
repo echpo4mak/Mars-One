@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Work log</h1>
+{% for job in jobs %}
+<div>
+    <h2>Action #{{loop.index}}</h2>
+    <table>
+        <tr>
+            <th>Title of activity</th>
+            <th>Team leader</th>
+            <th>Duration</th>
+            <th>List of collaborators</th>
+            <th>Is finished</th>
+        </tr>
+        <tr>
+            <td>{{job.job}}</td>
+            <td>{{job.team_leader}}</td>
+            <td>{{job.work_size}} hours</td>
+            <td>{{job.collaborators}}</td>
+            <td class="alt">{{job.is_finished}}</td>
+        </tr>
+    </table>
+    {% if (current_user.is_authenticated and current_user == job.user) or (current_user.is_authenticated and
+    current_user.id == 1)%}
+    <a href="/jobs/{{job.id}}" class="btn btn-warning">Изменить</a>
+    <a href="/jobs_delete/{{job.id}}" class="btn btn-danger">Удалить</a>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
