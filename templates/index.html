@@ -18,7 +18,11 @@
             <td>{{job.team_leader}}</td>
             <td>{{job.work_size}} hours</td>
             <td>{{job.collaborators}}</td>
-            <td class="alt">{{job.is_finished}}</td>
+            {% if job.is_finished %}
+            <td class="alt">Finished</td>
+            {% else %}
+            <td class="alt">Not Finished</td>
+            {% endif %}
         </tr>
     </table>
     {% if (current_user.is_authenticated and current_user == job.user) or (current_user.is_authenticated and
