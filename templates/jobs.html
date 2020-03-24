@@ -41,6 +41,7 @@
     </p>
     {% endfor %}
     </p>
+    <p>{{ form.is_job_finished() }} {{ form.is_job_finished.label }}</p>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>
