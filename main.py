@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from data.jobs import Jobs
 from data.users import User
 from data.users_resource import UsersResource, UsersListResource
+from data.jobs_resource import JobsResource, JobsListResource
 from data.forms import LoginForm, RegisterForm, JobForm
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_restful import Api
@@ -17,6 +18,8 @@ api = Api(app)
 
 api.add_resource(UsersListResource, '/api/v2/users')
 api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
+api.add_resource(JobsResource, '/api/v2/jobs')
+api.add_resource(JobsListResource, '/api/v2/jobs/<int:job_id>')
 
 
 @app.route("/")
