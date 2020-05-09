@@ -4,13 +4,19 @@ from data import db_session
 from flask_login import LoginManager
 from data.jobs import Jobs
 from data.users import User
+from data.users_resource import UsersResource, UsersListResource
 from data.forms import LoginForm, RegisterForm, JobForm
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_restful import Api
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
+api = Api(app)
+
+api.add_resource(UsersListResource, '/api/v2/users')
+api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
 
 
 @app.route("/")
