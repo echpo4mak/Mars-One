@@ -101,6 +101,7 @@ def add_jobs():
         jobs.team_leader = form.team_leader.data
         jobs.work_size = form.work_size.data
         jobs.collaborators = form.collaborators.data
+        jobs.categories.type = form.category.data
         jobs.is_finished = form.is_job_finished.data
         current_user.jobs.append(jobs)
         session.merge(current_user)
@@ -122,6 +123,7 @@ def edit_jobs(id):
             jobs.team_leader = form.team_leader.data
             jobs.work_size = form.work_size.data
             jobs.collaborators = form.collaborators.data
+            jobs.categories.type = form.category.data
             jobs.is_finished = form.is_job_finished.data
         else:
             abort(404)
@@ -133,6 +135,7 @@ def edit_jobs(id):
             jobs.team_leader = form.team_leader.data
             jobs.work_size = form.work_size.data
             jobs.collaborators = form.collaborators.data
+            jobs.categories.type = form.category.data
             jobs.is_finished = form.is_job_finished.data
             session.commit()
             return redirect('/')

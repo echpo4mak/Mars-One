@@ -29,7 +29,8 @@ class JobForm(FlaskForm):
     team_leader = IntegerField('id тимлида', validators=[DataRequired()])
     work_size = IntegerField('Продолжительность работы', validators=[DataRequired()])
     collaborators = StringField('Список участников', validators=[DataRequired()])
-    is_job_finished = BooleanField('Is job finished?', validators=[DataRequired()])
+    is_job_finished = BooleanField('Is job finished?')
+    category = IntegerField('Категория работы', validators=[DataRequired()])
     submit = SubmitField('Применить')
 
 
