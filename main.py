@@ -11,6 +11,7 @@ from data.forms import LoginForm, RegisterForm, JobForm, DepartmentForm
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_restful import Api
 from requests import get
+import user_api
 import requests
 
 app = Flask(__name__)
@@ -237,8 +238,9 @@ def department_delete(id):
 @app.route('/users_show/<int:user_id>.', methods=['GET', 'POST'])
 @login_required
 def users_show(user_id):
-    response = get(f'http://localhost:5000/api/jobs/{user_id}').json()
-    toponym_to_find = response.address
+    response = get(f'http://localhost:5000/api/users/{user_id}').json()
+    toponym_to_find = response["address"]
+    print(toponym_to_find)
 
     geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
 
@@ -284,6 +286,7 @@ def users_show(user_id):
 
 def main():
     db_session.global_init("db/mars_explore.sqlite")
+    app.register_blueprint(user_api.blueprint)
     app.run()
 
 
