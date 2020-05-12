@@ -1,15 +1,17 @@
 from flask import Flask
-from flask import render_template, redirect, request, abort
+from flask import render_template, redirect, request, abort, url_for
 from data import db_session
 from flask_login import LoginManager
 from data.jobs import Jobs
 from data.users import User
 from data.departments import Department
 # from data.users_resource import UsersResource, UsersListResource
-#from data.jobs_resource import JobsResource, JobsListResource
+# from data.jobs_resource import JobsResource, JobsListResource
 from data.forms import LoginForm, RegisterForm, JobForm, DepartmentForm
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_restful import Api
+from requests import get
+import requests
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -17,10 +19,17 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 api = Api(app)
 
-#api.add_resource(UsersListResource, '/api/v2/users')
-#api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
-#api.add_resource(JobsResource, '/api/v2/jobs')
-#api.add_resource(JobsListResource, '/api/v2/jobs/<int:job_id>')
+
+# api.add_resource(UsersListResource, '/api/v2/users')
+# api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
+# api.add_resource(JobsResource, '/api/v2/jobs')
+# api.add_resource(JobsListResource, '/api/v2/jobs/<int:job_id>')
+
+def get_object_size(geo_object):
+    lower_corner = list(map(float, geo_object['boundedBy']['Envelope']['lowerCorner'].split()))
+    upper_corner = list(map(float, geo_object['boundedBy']['Envelope']['upperCorner'].split()))
+    return (str(abs(lower_corner[0] - upper_corner[0]) / 2),
+            str(abs(lower_corner[1] - upper_corner[1]) / 2))
 
 
 @app.route("/")
@@ -223,6 +232,54 @@ def department_delete(id):
     else:
         abort(404)
     return redirect('/')
+
+
+@app.route('/users_show/<int:user_id>.', methods=['GET', 'POST'])
+@login_required
+def users_show(user_id):
+    response = get(f'http://localhost:5000/api/jobs/{user_id}').json()
+    toponym_to_find = response.address
+
+    geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+
+    geocoder_params = {
+        "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+        "geocode": toponym_to_find,
+        "format": "json"}
+
+    response = requests.get(geocoder_api_server, params=geocoder_params)
+
+    if not response:
+        # обработка ошибочной ситуации
+        pass
+
+    # Преобразуем ответ в json-объект
+    json_response = response.json()
+    # Получаем первый топоним из ответа геокодера.
+    toponym = json_response["response"]["GeoObjectCollection"][
+        "featureMember"][0]["GeoObject"]
+    # Координаты центра топонима:
+    toponym_coodrinates = toponym["Point"]["pos"]
+    # Долгота и широта:
+    toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
+
+    delta = get_object_size(toponym)
+
+    # Собираем параметры для запроса к StaticMapsAPI:
+    map_params = {
+        'll': ','.join([toponym_longitude, toponym_lattitude]),
+        'spn': ",".join([delta[0], delta[1]]),
+        'l': 'sat',
+        'pt': ','.join([toponym_longitude, toponym_lattitude, 'flag'])
+    }
+
+    map_api_server = "http://static-maps.yandex.ru/1.x/"
+    # ... и выполняем запрос
+    response = requests.get(map_api_server, params=map_params)
+    map_file = "map.png"
+    with open(map_file, "wb") as f:
+        f.write(response.content)
+    return render_template('users_show.html', title='Nostalgy', url_nostalgy=url_for('map.png'))
 
 
 def main():
