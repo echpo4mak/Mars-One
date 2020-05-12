@@ -235,11 +235,12 @@ def department_delete(id):
     return redirect('/')
 
 
-@app.route('/users_show/<int:user_id>.', methods=['GET', 'POST'])
+@app.route('/users_show/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def users_show(user_id):
     response = get(f'http://localhost:5000/api/users/{user_id}').json()
-    toponym_to_find = response["address"]
+    print(response)
+    toponym_to_find = response["users"]["address"]
     print(toponym_to_find)
 
     geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
@@ -278,10 +279,10 @@ def users_show(user_id):
     map_api_server = "http://static-maps.yandex.ru/1.x/"
     # ... и выполняем запрос
     response = requests.get(map_api_server, params=map_params)
-    map_file = "map.png"
+    map_file = "static/img/map.png"
     with open(map_file, "wb") as f:
         f.write(response.content)
-    return render_template('users_show.html', title='Nostalgy', url_nostalgy=url_for('map.png'))
+    return render_template('users_show.html', title='Nostalgy', url_nostalgy=url_for('static', filename='img/map.png'))
 
 
 def main():
