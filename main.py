@@ -4,9 +4,10 @@ from data import db_session
 from flask_login import LoginManager
 from data.jobs import Jobs
 from data.users import User
-from data.users_resource import UsersResource, UsersListResource
-from data.jobs_resource import JobsResource, JobsListResource
-from data.forms import LoginForm, RegisterForm, JobForm
+from data.departments import Department
+# from data.users_resource import UsersResource, UsersListResource
+#from data.jobs_resource import JobsResource, JobsListResource
+from data.forms import LoginForm, RegisterForm, JobForm, DepartmentForm
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_restful import Api
 
@@ -16,14 +17,14 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 api = Api(app)
 
-api.add_resource(UsersListResource, '/api/v2/users')
-api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
-api.add_resource(JobsResource, '/api/v2/jobs')
-api.add_resource(JobsListResource, '/api/v2/jobs/<int:job_id>')
+#api.add_resource(UsersListResource, '/api/v2/users')
+#api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
+#api.add_resource(JobsResource, '/api/v2/jobs')
+#api.add_resource(JobsListResource, '/api/v2/jobs/<int:job_id>')
 
 
 @app.route("/")
-def index():
+def job_index():
     session = db_session.create_session()
     if current_user.is_authenticated:
         jobs = session.query(Jobs).filter(Jobs.is_finished.is_(False))
@@ -147,6 +148,74 @@ def jobs_delete(id):
     jobs = session.query(Jobs).filter(Jobs.id == id).first()
     if jobs:
         session.delete(jobs)
+        session.commit()
+    else:
+        abort(404)
+    return redirect('/')
+
+
+@app.route("/departments_index")
+def departments_index():
+    session = db_session.create_session()
+    departments = session.query(Department).all()
+    return render_template("departments_index.html", departments=departments)
+
+
+@app.route('/departments', methods=['GET', 'POST'])
+@login_required
+def add_department():
+    form = DepartmentForm()
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        department = Department()
+        department.title = form.title.data
+        department.chief = form.chief.data
+        department.members = form.members.data
+        department.email = form.email.data
+        current_user.departments.append(department)
+        session.merge(current_user)
+        session.commit()
+        return redirect('/')
+    return render_template('departments.html', title='Добавление департамента',
+                           form=form)
+
+
+@app.route('/departments/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_department(id):
+    form = DepartmentForm()
+    if request.method == "GET":
+        session = db_session.create_session()
+        department = session.query(Department).filter((Department.id == id)).first()
+        if department:
+            department.title = form.title.data
+            department.chief = form.chief.data
+            department.members = form.members.data
+            department.email = form.email.data
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        department = session.query(Department).filter((Department.id == id)).first()
+        if department:
+            department.title = form.title.data
+            department.chief = form.chief.data
+            department.members = form.members.data
+            department.email = form.email.data
+            session.commit()
+            return redirect('/')
+        else:
+            abort(404)
+    return render_template('departments.html', title='Редактирование департамента', form=form)
+
+
+@app.route('/departments_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def department_delete(id):
+    session = db_session.create_session()
+    department = session.query(Department).filter((Department.id == id)).first()
+    if department:
+        session.delete(department)
         session.commit()
     else:
         abort(404)
